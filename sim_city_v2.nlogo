@@ -5,7 +5,7 @@ breed [ factories factory ]
 breed [ drops drop ]
 breed [ recruteurs ]
 
-globals [ water-need freq ]
+globals [ water-need pib ]
 houses-own [ number water ]
 drops-own [ capacity ]
 factories-own [ employees ]
@@ -15,7 +15,7 @@ to setup
   ca
   set population 0
   set water-need 3
-  set freq 10
+  set pib 0
   ask patches [ set pcolor yellow ]
   ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ]
   crt 50 [
@@ -24,7 +24,6 @@ to setup
     set color green
     move-to one-of patches with [ pcolor = yellow and not any? turtles-here ]
   ]
-;  generate-vehicles
   generate-houses
   generate-water-tower
   generate-factory
@@ -115,14 +114,18 @@ to decide-for-drops
   let r patch-right-and-ahead 90 1
   let l patch-left-and-ahead 90 1
   if (any? houses-on (patch-set f r l)) [
-      ask houses-on neighbors4 [ set water water + 1 ]
-      set capacity capacity - 1
+      ask houses-on neighbors4 [
+        if ([water] of self < 30) [
+          set water water + 1
+        ]
+      ]
+      set capacity capacity - (count houses-on (patch-set f r l)) ;probleme
   ]
 end
 
 
 to decide-for-water-towers
-  if (ticks mod freq = 0) [
+  if (ticks mod drop-freq = 0) [
     hatch-drops 1 [
       set shape "drop"
       set color blue
@@ -131,17 +134,14 @@ to decide-for-water-towers
       move-to patch-ahead 1
     ]
   ]
-;  if (ticks mod 50 = 0) [
-;    set employees employees - 1
-;  ]
 end
 
 
 to decide-for-factories
-  if (ticks mod 100 = 0) [
+  if (ticks mod scout-freq = 0) [
     hatch-recruteurs 1 [
       set shape "person"
-      set color brown
+      set color [color] of one-of factories
       set size 2
       move-to patch-ahead 1
     ]
@@ -159,6 +159,7 @@ to decide-for-recruteurs
     if (random 10 < 3) [
       hatch-cars 1 [
         set shape "car"
+        set color [color] of one-of houses-on f
         move-to patch-here
         ask houses-on f [ set number number - 1 ]
       ]
@@ -170,6 +171,7 @@ to decide-for-recruteurs
       if (random 10 < 3) [
         hatch-cars 1 [
           set shape "car"
+          set color [color] of one-of houses-on r
           move-to patch-here
           ask houses-on r [ set number number - 1 ]
         ]
@@ -191,6 +193,11 @@ to decide-for-recruteurs
     ]
   ]
 end
+
+
+;to is-houses-on-patch(patchs)
+
+;end
 
 ;to propagate
 ;  ;initialiser à -1
@@ -238,6 +245,7 @@ to go
   ask recruteurs [ decide-for-recruteurs ]
   ask cars [ advance ]
   ask houses [ decide-for-houses ]
+  ask houses [ set label number ]
   tick
 end
 @#$#@#$#@
@@ -356,10 +364,40 @@ INPUTBOX
 608
 248
 population
-248
+117
 1
 0
 Number
+
+SLIDER
+398
+33
+570
+66
+drop-freq
+drop-freq
+0
+100
+10
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+397
+80
+569
+113
+scout-freq
+scout-freq
+0
+100
+100
+10
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
