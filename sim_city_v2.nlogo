@@ -93,14 +93,13 @@ end
 
 
 to decide-for-houses
-  if (water > 0) [
-    if (ticks mod 100 = 0) [ set water water - 1 ]
-  ]
-  if (water < number * water-need) [
+  if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ]
+
+  if (number > 0 and water < number * water-need) [
     set number number - 1
     set population population - 1
   ]
-  if (water = (number + 1) * water-need and number < 10) [
+  if (number < 10 and water = (number + 1) * water-need) [
     set number number + 1
     set population population + 1
   ]
@@ -125,8 +124,8 @@ end
 
 
 to decide-for-water-towers
-  if (ticks mod drop-freq = 0) [
-    hatch-drops 1 [
+  if (ticks mod drop-freq = 0) [ ;génération d'une goutte d'eau tous les x tours
+    hatch-drops 1 [ ;création d'une goutte d'eau
       set shape "drop"
       set color blue
       set size 2
@@ -138,13 +137,19 @@ end
 
 
 to decide-for-factories
-  if (ticks mod scout-freq = 0) [
+  if (ticks mod scout-freq = 0) [ ;tous les x tours création d'un recruteur
     hatch-recruteurs 1 [
       set shape "person"
       set color [color] of one-of factories
       set size 2
       move-to patch-ahead 1
     ]
+  ]
+  if (ticks mod retire-freq = 0) [
+    set employees employees - 1
+  ]
+  if (ticks mod prod-freq = 0) [
+    set pib pib + employees
   ]
 end
 
@@ -161,7 +166,7 @@ to decide-for-recruteurs
         set shape "car"
         set color [color] of one-of houses-on f
         move-to patch-here
-        ask houses-on f [ set number number - 1 ]
+;        ask houses-on f [ set number number - 1 ]
       ]
       die
     ]
@@ -173,7 +178,7 @@ to decide-for-recruteurs
           set shape "car"
           set color [color] of one-of houses-on r
           move-to patch-here
-          ask houses-on r [ set number number - 1 ]
+;          ask houses-on r [ set number number - 1 ]
         ]
         die
       ]
@@ -185,7 +190,7 @@ to decide-for-recruteurs
             set shape "car"
             set color [color] of one-of houses-on l
             move-to patch-here
-            ask houses-on l [ set number number - 1 ]
+;            ask houses-on l [ set number number - 1 ]
           ]
           die
         ]
@@ -226,8 +231,8 @@ end
 ;      ]
 ;    ]
 ;end
-;
-;
+
+
 ;to-report inconnus
 ;  let connus patches with [ dist != -1 ]
 ;  foreach connus [
@@ -359,12 +364,12 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-371
-188
-608
-248
+130
+145
+367
+205
 population
-117
+409
 1
 0
 Number
@@ -378,7 +383,7 @@ drop-freq
 drop-freq
 0
 100
-10
+50
 10
 1
 NIL
@@ -395,6 +400,36 @@ scout-freq
 100
 100
 10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+412
+134
+584
+167
+retire-freq
+retire-freq
+100
+1000
+500
+500
+1
+NIL
+HORIZONTAL
+
+SLIDER
+429
+208
+601
+241
+prod-freq
+prod-freq
+100
+1000
+200
+200
 1
 NIL
 HORIZONTAL
