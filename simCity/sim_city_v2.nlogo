@@ -84,7 +84,7 @@ to advance
     [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
     ifelse (patch-here = r)
       [ right 90 ]
-      [ if (patch-here = l) [ left 90] ]
+      [ if (patch-here = l) [ left 90 ] ]
    ]
    if (any? factories-on (patch-set f r l)) [
      ask factories with [ employees < 100 ] [ set employees employees + 1 ]
@@ -204,19 +204,19 @@ end
 
 ;end
 
-;to propagate
-;  ;initialiser à -1
-;  ask patches [ set dist -1 ]
-;  ;parcours en largeur à partir des cibles : si on trouve plus court, on écrase
-;  let p inconnus
-;  let d 0
-;  while [ any? p ] [
-;    ask p [ set dist d ]
-;    set d d + 1
-;    set p (patch-set [ voisins with [ not obstacle? and (dist = -1) ]] of p)
-;  ]
-;
-;  ;affichage éventuel
+to propagate
+  ;initialiser à -1
+  ask patches with [ pcolor = grey ] [ set dist -1 ]
+  ;parcours en largeur à partir des cibles : si on trouve plus court, on écrase
+  let p inconnus
+  let d 0
+  while [ any? p ] [
+    ask p [ set dist d ]
+    set d d + 1
+    set p (patch-set [ voisins with [ dist = -1 ]] of p)
+  ]
+
+  ;affichage éventuel
 ;  ifelse (show-labels?)
 ;    [ ask patches
 ;      [
@@ -230,17 +230,25 @@ end
 ;        set plabel-color black
 ;      ]
 ;    ]
-;end
+end
 
 
-;to-report inconnus
-;  let connus patches with [ dist != -1 ]
+;retourne les routes voisines d'un ensemble de patchs route
+to-report voisins
+;  let v
+  report neighbors4 with [ pcolor = grey ]
+end
+
+
+to-report inconnus
+  let connus patches with [ dist != -1 and pcolor = grey ]
+  report patch-set [ neighbors with [ dist = -1 ]] of connus
 ;  foreach connus [
-;    ask ? [ if (any? neighbors4 with [ dist = -1 ]) [
-;      set inconnus lput ? inconnus
-;  ]
+;    ask ? [ if (any? neighbors4 with [ dist = -1 and pcolor = grey]) [
+;      set inc lput ? inc
+;  ]]]
 ;  report inconnus
-;end
+end
 
 
 to go
@@ -369,7 +377,7 @@ INPUTBOX
 367
 205
 population
-409
+170
 1
 0
 Number
@@ -383,7 +391,7 @@ drop-freq
 drop-freq
 0
 100
-50
+20
 10
 1
 NIL
