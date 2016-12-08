@@ -7,7 +7,7 @@ breed [ recruteurs ]
 breed [ centrals ]
 breed [ lightnings ]
 
-globals [ water-need elec-need pib ]
+globals [ water-need elec-need ]
 houses-own [ number water elec ]
 drops-own [ capacity ]
 lightnings-own [ capacity ]
@@ -42,8 +42,8 @@ to generate-houses
     set size 2
     set number random 6 + 1
     set population population + number
-    set water number * water-need
-    set elec number * elec-need
+    set water number * water-need + 2
+    set elec number * elec-need + 1
     move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
     face one-of (neighbors4 with [ pcolor = grey ])
   ]
@@ -102,6 +102,8 @@ end
 
 
 to decide-for-houses
+  if (number = 0) [ die ]
+
   if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ]
   if (elec > 0 and ticks mod 200 = 0) [ set elec elec - 1 ]
 
@@ -109,7 +111,7 @@ to decide-for-houses
     set number number - 1
     set population population - 1
   ]
-  if (number < 10 and (water = (number + 1) * water-need) and (elec = (number + 1) * elec-need)) [
+  if (number < 10 and (water >= (number + 1) * water-need) and (elec >= (number + 1) * elec-need)) [
     set number number + 1
     set population population + 1
   ]
@@ -117,7 +119,7 @@ end
 
 
 to decide-for-drops
-  if (capacity = 0) [ die ]
+  if (capacity < 0) [ die ]
   advance
   let f patch-ahead 1
   let r patch-right-and-ahead 90 1
@@ -134,7 +136,7 @@ end
 
 
 to decide-for-lightnings
-  if (capacity = 0) [ die ]
+  if (capacity < 0) [ die ]
   advance
   let f patch-ahead 1
   let r patch-right-and-ahead 90 1
@@ -299,12 +301,17 @@ to go
   ask cars [ advance ]
   ask houses [ decide-for-houses ]
   ask houses [ set label number ]
-  if mouse-down? [
+  if mouse-down? and house-cost < pib [
     create-houses 1 [
       setxy mouse-xcor mouse-ycor
       set shape "house"
       set size 2
+      set number random 6 + 1
+      set population population + number
+      set water number * water-need + 2
+      set elec number * elec-need + 1
       face one-of (neighbors4 with [ pcolor = grey ])
+      set pib pib - house-cost
     ]
   ]
   tick
@@ -420,12 +427,12 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-130
-145
-367
-205
+136
+120
+373
+180
 population
-129
+197
 1
 0
 Number
@@ -439,7 +446,7 @@ drop-freq
 drop-freq
 0
 100
-10
+30
 10
 1
 NIL
@@ -476,10 +483,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-429
-208
-601
-241
+416
+178
+588
+211
 prod-freq
 prod-freq
 100
@@ -491,19 +498,45 @@ NIL
 HORIZONTAL
 
 SLIDER
-257
-250
-429
-283
+416
+226
+588
+259
 light-freq
 light-freq
 0
 100
-10
+30
 10
 1
 NIL
 HORIZONTAL
+
+SLIDER
+79
+256
+251
+289
+house-cost
+house-cost
+100
+1000
+500
+100
+1
+NIL
+HORIZONTAL
+
+INPUTBOX
+133
+188
+386
+248
+pib
+11519
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
