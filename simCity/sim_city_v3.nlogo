@@ -432,16 +432,16 @@ INPUTBOX
 373
 180
 population
-197
+196
 1
 0
 Number
 
 SLIDER
-398
-33
-570
-66
+422
+35
+594
+68
 drop-freq
 drop-freq
 0
@@ -453,10 +453,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-397
-80
-569
-113
+421
+82
+593
+115
 scout-freq
 scout-freq
 0
@@ -468,10 +468,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-412
-134
-584
-167
+418
+133
+590
+166
 retire-freq
 retire-freq
 100
@@ -483,10 +483,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-416
-178
-588
-211
+422
+177
+594
+210
 prod-freq
 prod-freq
 100
@@ -498,15 +498,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-416
-226
-588
-259
+422
+225
+594
+258
 light-freq
 light-freq
 0
 100
-30
+50
 10
 1
 NIL
@@ -533,7 +533,7 @@ INPUTBOX
 386
 248
 pib
-11519
+794
 1
 0
 Number
