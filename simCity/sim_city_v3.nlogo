@@ -95,14 +95,35 @@ to advance
       [ right 90 ]
       [ if (patch-here = l) [ left 90 ] ]
    ]
+;   if (any? factories-on (patch-set f r l)) [
+;     ask factories with [ employees < 100 ] [ set employees employees + 1 ]
+;   ]
+end
+
+
+to decide-for-cars
+  let f patch-ahead 1
+  let r patch-right-and-ahead 90 1
+  let l patch-left-and-ahead 90 1
+  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
+    [ right 180 ]
+    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
+    ifelse (patch-here = r)
+      [ right 90 ]
+      [ if (patch-here = l) [ left 90 ] ]
+   ]
    if (any? factories-on (patch-set f r l)) [
      ask factories with [ employees < 100 ] [ set employees employees + 1 ]
+     die
    ]
 end
 
 
 to decide-for-houses
-  if (number = 0) [ die ]
+;  if (random 1000 < 1) [
+;    die
+;    set population population - [number] of self
+;  ]
 
   if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ]
   if (elec > 0 and ticks mod 200 = 0) [ set elec elec - 1 ]
@@ -173,11 +194,11 @@ to decide-for-factories
       move-to patch-ahead 1
     ]
   ]
-  if (ticks mod retire-freq = 0) [
+  if (ticks mod retire-freq = 0 and employees > 0) [
     set employees employees - 1
   ]
   if (ticks mod prod-freq = 0) [
-    set pib pib + employees
+    set pib pib + employees * productivity
   ]
 end
 
@@ -298,7 +319,7 @@ to go
   ask lightnings [ decide-for-lightnings ]
   ask factories [ decide-for-factories ]
   ask recruteurs [ decide-for-recruteurs ]
-  ask cars [ advance ]
+  ask cars [ decide-for-cars ]
   ask houses [ decide-for-houses ]
   ask houses [ set label number ]
   if mouse-down? and house-cost < pib [
@@ -306,10 +327,9 @@ to go
       setxy mouse-xcor mouse-ycor
       set shape "house"
       set size 2
-      set number random 6 + 1
-      set population population + number
-      set water number * water-need + 2
-      set elec number * elec-need + 1
+      set number 0
+      set water 0
+      set elec 0
       face one-of (neighbors4 with [ pcolor = grey ])
       set pib pib - house-cost
     ]
@@ -345,10 +365,10 @@ ticks
 30.0
 
 BUTTON
-14
-182
-77
-215
+22
+102
+85
+135
 NIL
 setup
 NIL
@@ -361,26 +381,11 @@ NIL
 NIL
 1
 
-SLIDER
-42
-30
-295
-63
-nb-vehicles
-nb-vehicles
-10
-100
-50
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-12
-136
-75
-169
+20
+56
+83
+89
 NIL
 go
 T
@@ -394,10 +399,10 @@ NIL
 0
 
 SLIDER
-41
-76
-295
-109
+129
+20
+383
+53
 nb-houses
 nb-houses
 10
@@ -409,10 +414,10 @@ NIL
 HORIZONTAL
 
 PLOT
-73
-304
-504
-588
+40
+320
+471
+604
 population
 ticks
 population
@@ -427,36 +432,36 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-136
-120
-373
-180
+137
+71
+374
+131
 population
-196
+383
 1
 0
 Number
 
 SLIDER
-422
-35
-594
-68
+416
+20
+588
+53
 drop-freq
 drop-freq
 0
 100
-30
+10
 10
 1
 NIL
 HORIZONTAL
 
 SLIDER
-421
-82
-593
-115
+415
+67
+587
+100
 scout-freq
 scout-freq
 0
@@ -468,75 +473,90 @@ NIL
 HORIZONTAL
 
 SLIDER
-418
-133
-590
-166
+412
+118
+584
+151
 retire-freq
 retire-freq
 100
 1000
-500
-500
+200
+100
 1
 NIL
 HORIZONTAL
 
 SLIDER
-422
-177
-594
+416
+162
+588
+195
+prod-freq
+prod-freq
+100
+1000
+200
+200
+1
+NIL
+HORIZONTAL
+
+SLIDER
+416
 210
-prod-freq
-prod-freq
-100
-1000
-200
-200
-1
-NIL
-HORIZONTAL
-
-SLIDER
-422
-225
-594
-258
+588
+243
 light-freq
 light-freq
 0
 100
-50
+10
 10
 1
 NIL
 HORIZONTAL
 
 SLIDER
-79
+416
 256
-251
+588
 289
 house-cost
 house-cost
 100
 1000
-500
+1000
 100
 1
 NIL
 HORIZONTAL
 
 INPUTBOX
-133
-188
-386
-248
+134
+139
+375
+199
 pib
-794
+120760
 1
 0
 Number
+
+SLIDER
+165
+248
+337
+281
+productivity
+productivity
+0
+100
+10
+10
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
