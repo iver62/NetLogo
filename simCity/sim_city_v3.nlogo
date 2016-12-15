@@ -22,16 +22,18 @@ to setup
   set pib 0
   ask patches [ set pcolor yellow ]
   ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ]
+
+  generate-houses
+  generate-water-tower
+  generate-factory
+  generate-central
   crt 50 [
     set shape "tree"
     set size 2
     set color green
     move-to one-of patches with [ pcolor = yellow and not any? turtles-here ]
   ]
-  generate-houses
-  generate-water-tower
-  generate-factory
-  generate-central
+
   reset-ticks
 end
 
@@ -75,8 +77,8 @@ end
 
 to generate-central
   create-centrals 1 [
-    set shape "electric outlet"
-    set size 2
+    set shape "triangle"
+    set size 3
     set color red
     move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
     face one-of (neighbors4 with [ pcolor = grey ])
@@ -338,13 +340,13 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-644
-48
-1344
-542
+880
+26
+1670
+581
 30
 20
-11.3115
+12.8
 1
 10
 1
@@ -365,10 +367,10 @@ ticks
 30.0
 
 BUTTON
-22
 102
-85
-135
+19
+165
+52
 NIL
 setup
 NIL
@@ -383,9 +385,9 @@ NIL
 
 BUTTON
 20
-56
+22
 83
-89
+55
 NIL
 go
 T
@@ -399,10 +401,10 @@ NIL
 0
 
 SLIDER
-129
-20
-383
-53
+585
+315
+785
+348
 nb-houses
 nb-houses
 10
@@ -414,10 +416,10 @@ NIL
 HORIZONTAL
 
 PLOT
-40
-320
-471
-604
+5
+424
+548
+752
 population
 ticks
 population
@@ -432,21 +434,21 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-137
-71
-374
-131
+582
+419
+783
+479
 population
-383
+313
 1
 0
 Number
 
 SLIDER
-416
-20
-588
-53
+586
+17
+783
+50
 drop-freq
 drop-freq
 0
@@ -458,25 +460,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-415
-67
-587
-100
-scout-freq
-scout-freq
-0
-100
-100
-10
-1
-NIL
-HORIZONTAL
-
-SLIDER
-412
-118
 584
-151
+120
+783
+153
+scout-freq
+scout-freq
+0
+100
+100
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+584
+217
+783
+250
 retire-freq
 retire-freq
 100
@@ -488,10 +490,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-416
-162
-588
-195
+584
+266
+782
+299
 prod-freq
 prod-freq
 100
@@ -503,10 +505,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-416
-210
-588
-243
+584
+67
+783
+100
 light-freq
 light-freq
 0
@@ -518,10 +520,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-416
-256
-588
-289
+583
+362
+783
+395
 house-cost
 house-cost
 100
@@ -533,21 +535,21 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-134
-139
-375
-199
+581
+494
+787
+554
 pib
-120760
+1940
 1
 0
 Number
 
 SLIDER
-165
-248
-337
-281
+584
+167
+784
+200
 productivity
 productivity
 0
@@ -557,6 +559,24 @@ productivity
 1
 NIL
 HORIZONTAL
+
+PLOT
+8
+89
+494
+400
+PIB
+ticks
+pib
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot pib"
 
 @#$#@#$#@
 ## WHAT IS IT?
