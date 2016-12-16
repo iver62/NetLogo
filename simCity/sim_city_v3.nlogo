@@ -14,6 +14,7 @@ lightnings-own [ capacity ]
 factories-own [ employees ]
 patches-own [ dist ]
 
+
 to setup
   ca
   set population 0
@@ -34,6 +35,17 @@ to setup
     move-to one-of patches with [ pcolor = yellow and not any? turtles-here ]
   ]
 
+  ask patches with [pcolor = grey] [set dist -1]
+  let neigh4 [neighbors4] of one-of factories
+  let d 1
+  while [ any? neigh4 ] [
+    ask neigh4 [ set dist d ]
+    set d d + 1
+    set neigh4 patch-set( [ neighbors4 with [ pcolor = grey and dist = -1 ]] of neigh4 )
+  ]
+
+  ask patches with [ pcolor = grey ] [ set plabel dist ]
+
   reset-ticks
 end
 
@@ -44,8 +56,8 @@ to generate-houses
     set size 2
     set number random 6 + 1
     set population population + number
-    set water number * water-need + 2
-    set elec number * elec-need + 1
+    set water number * water-need + water-need - 1
+    set elec number * elec-need + elec-need - 1
     move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
     face one-of (neighbors4 with [ pcolor = grey ])
   ]
@@ -97,24 +109,47 @@ to advance
       [ right 90 ]
       [ if (patch-here = l) [ left 90 ] ]
    ]
-;   if (any? factories-on (patch-set f r l)) [
-;     ask factories with [ employees < 100 ] [ set employees employees + 1 ]
-;   ]
 end
 
 
 to decide-for-cars
+;  let f patch-ahead 1
+;  let r patch-right-and-ahead 90 1
+;  let l patch-left-and-ahead 90 1
+;  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
+;    [ right 180 ]
+;    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
+;    ifelse (patch-here = r)
+;      [ right 90 ]
+;      [ if (patch-here = l) [ left 90 ] ]
+;   ]
+;   if (any? factories-on (patch-set f r l)) [
+;     ask factories with [ employees < 100 ] [ set employees employees + 1 ]
+;     die
+;   ]
+;  ask patches with [pcolor = grey] [set dist -1]
+;  let neigh4 [neighbors4] of one-of factories
+;  let d 1
+;  while [ any? neigh4 ] [
+;    ask neigh4 [ set dist d ]
+;    set d d + 1
+;    set neigh4 patch-set( [ neighbors4 with [ pcolor = grey and dist = -1 ]] of neigh4 )
+;  ]
+;
+;  ask patches with [ pcolor = grey ] [ set plabel dist ]
+
   let f patch-ahead 1
   let r patch-right-and-ahead 90 1
   let l patch-left-and-ahead 90 1
   ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
     [ right 180 ]
-    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
-    ifelse (patch-here = r)
-      [ right 90 ]
-      [ if (patch-here = l) [ left 90 ] ]
-   ]
-   if (any? factories-on (patch-set f r l)) [
+    [ let s ((patch-set f r l) with [ pcolor = grey ]) with-min [ dist ]
+      move-to one-of s
+      ifelse (patch-here = r)
+        [ right 90 ]
+        [ if (patch-here = l) [ left 90 ] ]
+    ]
+  if (any? factories-on (patch-set f r l)) [
      ask factories with [ employees < 100 ] [ set employees employees + 1 ]
      die
    ]
@@ -122,11 +157,6 @@ end
 
 
 to decide-for-houses
-;  if (random 1000 < 1) [
-;    die
-;    set population population - [number] of self
-;  ]
-
   if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ]
   if (elec > 0 and ticks mod 200 = 0) [ set elec elec - 1 ]
 
@@ -149,7 +179,7 @@ to decide-for-drops
   let l patch-left-and-ahead 90 1
   if (any? houses-on (patch-set f r l)) [
       ask houses-on neighbors4 [
-        if ([water] of self < 30) [
+        if ([water] of self < 10 * water-need + water-need - 1) [
           set water water + 1
         ]
       ]
@@ -166,13 +196,14 @@ to decide-for-lightnings
   let l patch-left-and-ahead 90 1
   if (any? houses-on (patch-set f r l)) [
       ask houses-on neighbors4 [
-        if ([elec] of self < 30) [
+        if ([elec] of self < 10 * elec-need + elec-need - 1) [
           set elec elec + 1
         ]
       ]
       set capacity capacity - (count houses-on (patch-set f r l)) ;probleme
   ]
 end
+
 
 to decide-for-water-towers
   if (ticks mod drop-freq = 0) [ ;génération d'une goutte d'eau tous les x tours
@@ -217,6 +248,7 @@ to decide-for-centrals
   ]
 end
 
+
 to decide-for-recruteurs
   advance
   let f patch-ahead 1
@@ -224,36 +256,33 @@ to decide-for-recruteurs
   let l patch-left-and-ahead 90 1
   ifelse (any? houses-on (patch-set f))
   [
-    if (random 10 < 3) [
+    if (random 10 < 3 and [number] of one-of houses-on f > 0) [
       hatch-cars 1 [
         set shape "car"
         set color [color] of one-of houses-on f
         move-to patch-here
-;        ask houses-on f [ set number number - 1 ]
       ]
       die
     ]
   ]
   [
     ifelse (any? houses-on (patch-set r)) [
-      if (random 10 < 3) [
+      if (random 10 < 3 and [number] of one-of houses-on r > 0) [
         hatch-cars 1 [
           set shape "car"
           set color [color] of one-of houses-on r
           move-to patch-here
-;          ask houses-on r [ set number number - 1 ]
         ]
         die
       ]
     ]
     [
       if (any? houses-on (patch-set l)) [
-        if (random 10 < 3) [
+        if (random 10 < 3 and [number] of one-of houses-on l > 0) [
           hatch-cars 1 [
             set shape "car"
             set color [color] of one-of houses-on l
             move-to patch-here
-;            ask houses-on l [ set number number - 1 ]
           ]
           die
         ]
@@ -261,57 +290,6 @@ to decide-for-recruteurs
     ]
   ]
 end
-
-
-;to is-houses-on-patch(patchs)
-
-;end
-
-;to propagate
-;  ;initialiser à -1
-;  ask patches with [ pcolor = grey ] [ set dist -1 ]
-;  ;parcours en largeur à partir des cibles : si on trouve plus court, on écrase
-;  let p inconnus
-;  let d 0
-;  while [ any? p ] [
-;    ask p [ set dist d ]
-;    set d d + 1
-;    set p (patch-set [ voisins with [ dist = -1 ]] of p)
-;  ]
-
-  ;affichage éventuel
-;  ifelse (show-labels?)
-;    [ ask patches
-;      [
-;        set plabel-color white
-;        set plabel dist
-;      ]
-;    ]
-;    [ ask patches
-;      [
-;        set plabel ""
-;        set plabel-color black
-;      ]
-;    ]
-;end
-;
-;
-;;retourne les routes voisines d'un ensemble de patchs route
-;to-report voisins
-;;  let v
-;  report neighbors4 with [ pcolor = grey ]
-;end
-;
-;
-;to-report inconnus
-;  let connus patches with [ dist != -1 and pcolor = grey ]
-;  report patch-set (neighbors with [ dist = -1 ] of connus)
-;;  foreach connus [
-;;    ask ? [ if (any? neighbors4 with [ dist = -1 and pcolor = grey]) [
-;;      set inc lput ? inc
-;;  ]]]
-;;  report inconnus
-;end
 
 
 to go
@@ -439,7 +417,7 @@ INPUTBOX
 783
 479
 population
-313
+168
 1
 0
 Number
@@ -540,7 +518,7 @@ INPUTBOX
 787
 554
 pib
-1940
+0
 1
 0
 Number

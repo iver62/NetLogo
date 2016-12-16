@@ -12,11 +12,11 @@ patches-own [ dist ]
 
 to setup
   ca
-  set population 0
-  set water-need 3
-  set freq 10
+  set population 0 ;population globale
+  set water-need 3 ;besoin en eau d'une personne
+  set freq 10 ;tous les 10 ticks génération d'une goutte d'eau
   ask patches [ set pcolor yellow ]
-  ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ]
+  ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ] ;génération des routes
   crt 50 [
     set shape "tree"
     set size 2
@@ -30,114 +30,133 @@ to setup
   reset-ticks
 end
 
+
+;crée nb-vehicles voitures et les place aléatoirement sur un patch gris
 to generate-vehicles
   create-cars nb-vehicles [
     set shape "car"
-    move-to one-of (patches with [ pcolor = grey ])
+    set size 2
+    move-to one-of (patches with [ pcolor = grey ]) ;placement des voitures sur un patch gris
     face one-of (neighbors4 with [ pcolor = grey ])
   ]
 end
 
+
+;crée nb-houses maisons et les place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-houses
   create-houses nb-houses [
     set shape "house"
     set size 2
-    set number random 6 + 1
-    set population population + number
-    set water number * water-need
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    set number random 6 + 1 ;à l'initialisation le nombre d'habitants est entre 1 et 6
+    set population population + number ;qu'on ajoute à la population globale
+    set water number * water-need + water-need - 1 ;initialisation du nombre d'unités d'eau en fonction du nombre d'habitants
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;la maison est face à la route
   ]
 end
 
 
+;crée un chateau d'eau et le place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-water-tower
   create-water-towers 1 [
-    setxy 24 19
     set shape "cylinder"
     set size 3
     set color blue
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;le château d'eau est face à la route
   ]
 end
 
 
+;crée une usine et la place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-factory
   create-factories 1 [
-    set employees 0
+    set employees 0 ;au début le nombre d'employés est nul
     set shape "factory"
     set size 4
     set color brown
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
   ]
 end
 
 
+;permet d'avancer au hasard sur les routes
 to advance
-  let f patch-ahead 1
-  let r patch-right-and-ahead 90 1
-  let l patch-left-and-ahead 90 1
-  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
-    [ right 180 ]
-    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
+  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ])) ;s'il n'y a pas de route ni en face ni à gauche ni à droite
+    [ right 180 ] ;demi tour
+    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ]) ;sinon déplacement sur un des patches autour
     ifelse (patch-here = r)
       [ right 90 ]
       [ if (patch-here = l) [ left 90] ]
    ]
-   if (any? factories-on (patch-set f r l)) [
-     ask factories with [ employees < 100 ] [ set employees employees + 1 ]
-   ]
 end
 
 
+;comportement des voitures
+to decide-for-cars
+  advance ;avance au hasard
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
+  if (any? factories-on (patch-set f r l)) [ ;s'il y a une usine à côté
+     ask factories with [ employees < 100 ] [ set employees employees + 1 ] ;incrémentation du nombre d'employés dans l'usine si le nombre d'employés est inférieur à 100
+  ]
+end
+
+
+;comportement d'une maison
 to decide-for-houses
-  if (water > 0) [
-    if (ticks mod 100 = 0) [ set water water - 1 ]
+  if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ] ;tous les 100 tours consommation d'une unité eau
+
+  if (water < number * water-need) [ ;s'il n y a pas assez d'eau pour les habitants de la maison
+    set number number - 1 ;décrémentation du nombre d'habitants
+    set population population - 1 ;décrémentation de la population globale
   ]
-  if (water < number * water-need) [
-    set number number - 1
-    set population population - 1
-  ]
-  if (water = (number + 1) * water-need and number < 10) [
-    set number number + 1
-    set population population + 1
+  if (water = (number + 1) * water-need and number < 10) [ ;s'il y assez d'eau pour un habitant en plus et que la limite du nombre d'habitants n'est pas atteinte
+    set number number + 1 ;incrémentation du nombre d'habitants
+    set population population + 1 ;incrémentation de la population globale
   ]
 end
 
 
+;comportement d'une goutte d'eau
 to decide-for-drops
-  if (capacity = 0) [ die ]
-  advance
+  if (capacity < 0) [ die ] ;si la goutte d'eau n'a plus d'unité d'eau alors elle disparaît
+  advance ;elle avance au hasard sur les routes
   let f patch-ahead 1
   let r patch-right-and-ahead 90 1
   let l patch-left-and-ahead 90 1
-  if (any? houses-on (patch-set f r l)) [
-      ask houses-on neighbors4 [ set water water + 1 ]
-      set capacity capacity - 1
+  if (any? houses-on (patch-set f r l)) [ ;s'il y a une ou des maisons autour
+    ask houses-on neighbors4 [
+      if ([water] of self < (10 * water-need + water-need - 1)) [ ;si la limite d'eau n'est pas atteinte
+        set water water + 1 ;ajout d'une unité d'eau dans les maisons autour
+      ]
+    ]
+    set capacity capacity - (count houses-on (patch-set f r l)) ;diminution d'autant d'unités d'eau qu'elle en a distribuées
    ]
 end
 
 
+;comportement du château d'eau
 to decide-for-water-towers
-  if (ticks mod freq = 0) [
-    hatch-drops 1 [
+  if (ticks mod freq = 0) [ ;tous les freq ticks
+    hatch-drops 1 [ ;création d'une goutte d'eau
       set shape "drop"
       set color blue
       set size 2
-      set capacity 10
-      move-to patch-ahead 1
+      set capacity 10 ;capacité de 10 unités d'eau
+      move-to patch-ahead 1 ;la goutte d'eau est créée sur le patch en face du château d'eau
     ]
   ]
-;  if (ticks mod 50 = 0) [
-;    set employees employees - 1
-;  ]
 end
 
 
 to go
   ask water-towers [ decide-for-water-towers ]
-  ask cars [ advance ]
+  ask cars [ decide-for-cars ]
   ask drops [ decide-for-drops ]
   ask houses [ decide-for-houses ]
   tick
@@ -253,12 +272,12 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-371
-188
-608
-248
+349
+156
+586
+216
 population
-496
+327
 1
 0
 Number
