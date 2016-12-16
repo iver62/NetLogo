@@ -17,94 +17,105 @@ patches-own [ dist ]
 
 to setup
   ca
-  set population 0
-  set water-need 3
-  set elec-need 2
-  set pib 0
+  set population 0 ;population globale
+  set water-need 3 ;besoin en eau d'une personne
+  set elec-need 2 ;besoin en electricité d'une personne
+  set pib 0 ;au début le pib est nul
   ask patches [ set pcolor yellow ]
-  ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ]
+  ask patches with [ pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor or pxcor = 0 or pycor = 0 or pycor = max-pycor / 2 or pycor = max-pycor / (- 2) ] [ set pcolor grey ] ;génération des routes
 
   generate-houses
   generate-water-tower
   generate-factory
   generate-central
+
   crt 50 [
     set shape "tree"
     set size 2
     set color green
-    move-to one-of patches with [ pcolor = yellow and not any? turtles-here ]
+    move-to one-of patches with [ pcolor = yellow and not any? turtles-here ] ;place un arbre sur un patch jaune s'il n y a rien dessus
   ]
 
-  ask patches with [pcolor = grey] [set dist -1]
-  let neigh4 [neighbors4] of one-of factories
+  add-labels-to-roads
+
+  reset-ticks
+end
+
+
+;ajoute un label a chaque patch route, le label correspond à la distance d'un patch à l'usine
+to add-labels-to-roads
+  ask patches with [pcolor = grey] [set dist -1] ;au début tous les patchs ont une distance = -1
+  let neigh4 [neighbors4] of one-of factories ;les patchs autour de l'usine
   let d 1
   while [ any? neigh4 ] [
     ask neigh4 [ set dist d ]
     set d d + 1
     set neigh4 patch-set( [ neighbors4 with [ pcolor = grey and dist = -1 ]] of neigh4 )
   ]
-
   ask patches with [ pcolor = grey ] [ set plabel dist ]
-
-  reset-ticks
 end
 
 
+;crée nb-houses maisons et les place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-houses
   create-houses nb-houses [
     set shape "house"
     set size 2
-    set number random 6 + 1
-    set population population + number
-    set water number * water-need + water-need - 1
-    set elec number * elec-need + elec-need - 1
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    set number random 6 + 1 ;à l'initialisation le nombre d'habitants est entre 1 et 6
+    set population population + number ;qu'on ajoute à la population globale
+    set water number * water-need + water-need - 1 ;initialisation du nombre d'unités d'eau en fonction du nombre d'habitants
+    set elec number * elec-need + elec-need - 1 ;initialisation du nombre d'unités électriques en fonction du nombre d'habitants
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;la maison est face à la route
   ]
 end
 
 
+;crée un chateau d'eau et le place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-water-tower
   create-water-towers 1 [
     set shape "cylinder"
     set size 3
     set color blue
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;le château d'eau est face à la route
   ]
 end
 
 
+;crée une usine et la place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-factory
   create-factories 1 [
-    set employees 0
+    set employees 0 ;au début le nombre d'employés est nul
     set shape "factory"
     set size 4
     set color brown
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;l'usine est face à la route
   ]
 end
 
 
+;crée une usine électrique et la place aléatoirement sur un patch jaune à côté d'un patch gris
 to generate-central
   create-centrals 1 [
     set shape "triangle"
     set size 3
     set color red
-    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ]
-    face one-of (neighbors4 with [ pcolor = grey ])
+    move-to one-of patches with [ pcolor = yellow and any? neighbors with [ pcolor = grey ] and not any? turtles-here ] ;placement sur un patch jaune à côté d'un patch gris s'il n y a rien sur le patch
+    face one-of (neighbors4 with [ pcolor = grey ]) ;l'usine électrique est face à la route
   ]
 end
 
 
+;permet d'avancer au hasard sur les routes
 to advance
-  let f patch-ahead 1
-  let r patch-right-and-ahead 90 1
-  let l patch-left-and-ahead 90 1
-  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
-    [ right 180 ]
-    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
+  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ])) ;s'il n'y a pas de route ni en face ni à gauche ni à droite
+    [ right 180 ] ;demi tour
+    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ]) ;sinon déplacement sur un des patches autour
     ifelse (patch-here = r)
       [ right 90 ]
       [ if (patch-here = l) [ left 90 ] ]
@@ -112,39 +123,15 @@ to advance
 end
 
 
+;comportement des voitures
 to decide-for-cars
-;  let f patch-ahead 1
-;  let r patch-right-and-ahead 90 1
-;  let l patch-left-and-ahead 90 1
-;  ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
-;    [ right 180 ]
-;    [ move-to one-of ((patch-set f r l) with [ pcolor = grey ])
-;    ifelse (patch-here = r)
-;      [ right 90 ]
-;      [ if (patch-here = l) [ left 90 ] ]
-;   ]
-;   if (any? factories-on (patch-set f r l)) [
-;     ask factories with [ employees < 100 ] [ set employees employees + 1 ]
-;     die
-;   ]
-;  ask patches with [pcolor = grey] [set dist -1]
-;  let neigh4 [neighbors4] of one-of factories
-;  let d 1
-;  while [ any? neigh4 ] [
-;    ask neigh4 [ set dist d ]
-;    set d d + 1
-;    set neigh4 patch-set( [ neighbors4 with [ pcolor = grey and dist = -1 ]] of neigh4 )
-;  ]
-;
-;  ask patches with [ pcolor = grey ] [ set plabel dist ]
-
   let f patch-ahead 1
   let r patch-right-and-ahead 90 1
   let l patch-left-and-ahead 90 1
   ifelse (not any? ((patch-set f r l) with [ pcolor = grey ]))
     [ right 180 ]
-    [ let s ((patch-set f r l) with [ pcolor = grey ]) with-min [ dist ]
-      move-to one-of s
+    [ let p ((patch-set f r l) with [ pcolor = grey ])
+      move-to min-one-of p [ dist ]
       ifelse (patch-here = r)
         [ right 90 ]
         [ if (patch-here = l) [ left 90 ] ]
@@ -156,135 +143,142 @@ to decide-for-cars
 end
 
 
+;comportement d'une maison
 to decide-for-houses
-  if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ]
-  if (elec > 0 and ticks mod 200 = 0) [ set elec elec - 1 ]
+  if (water > 0 and ticks mod 100 = 0) [ set water water - 1 ] ;tous les 100 tours consommation d'une unité eau
+  if (elec > 0 and ticks mod 200 = 0) [ set elec elec - 1 ]  ;tous les 200 tours consommation d'une unité électrique
 
-  if (number > 0 and (water < number * water-need or elec < number * elec-need)) [
-    set number number - 1
-    set population population - 1
+  if (number > 0 and (water < number * water-need or elec < number * elec-need)) [ ;s'il n y a pas assez d'eau ou d'électricité pour les habitants de la maison
+    set number number - 1 ;décrémentation du nombre d'habitants
+    set population population - 1 ;décrémentation de la population globale
   ]
-  if (number < 10 and (water >= (number + 1) * water-need) and (elec >= (number + 1) * elec-need)) [
-    set number number + 1
-    set population population + 1
+  if (number < 10 and (water >= (number + 1) * water-need) and (elec >= (number + 1) * elec-need)) [ ;s'il y assez d'eau et d'électricité pour un habitant en plus et que la limite du nombre d'habitants n'est pas atteinte
+    set number number + 1 ;incrémentation du nombre d'habitants
+    set population population + 1 ;incrémentation de la population globale
   ]
 end
 
 
+;comportement d'une goutte d'eau
 to decide-for-drops
-  if (capacity < 0) [ die ]
-  advance
-  let f patch-ahead 1
-  let r patch-right-and-ahead 90 1
-  let l patch-left-and-ahead 90 1
+  if (capacity < 0) [ die ] ;si la goutte d'eau n'a plus d'unité d'eau alors elle disparaît
+  advance ;elle avance au hasard sur les routes
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
   if (any? houses-on (patch-set f r l)) [
       ask houses-on neighbors4 [
-        if ([water] of self < 10 * water-need + water-need - 1) [
-          set water water + 1
+        if ([water] of self < 10 * water-need + water-need - 1) [ ;si la limite d'eau n'est pas atteinte
+          set water water + 1 ;ajout d'une unité d'eau dans les maisons autour
         ]
       ]
-      set capacity capacity - (count houses-on (patch-set f r l)) ;probleme
+      set capacity capacity - (count houses-on (patch-set f r l)) ;diminution d'autant d'unités d'eau qu'elle en a distribuées
   ]
 end
 
 
+;comportement d'un éclair
 to decide-for-lightnings
-  if (capacity < 0) [ die ]
-  advance
-  let f patch-ahead 1
-  let r patch-right-and-ahead 90 1
-  let l patch-left-and-ahead 90 1
-  if (any? houses-on (patch-set f r l)) [
+  if (capacity < 0) [ die ] ;si l'éclair n'a plus d'unité électrique alors il disparaît
+  advance ;il avance au hasard sur les routes
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
+  if (any? houses-on (patch-set f r l)) [ ;s'il y a une ou des maisons autour
       ask houses-on neighbors4 [
-        if ([elec] of self < 10 * elec-need + elec-need - 1) [
-          set elec elec + 1
+        if ([elec] of self < 10 * elec-need + elec-need - 1) [ ;si la limite d'électricité n'est pas atteinte
+          set elec elec + 1 ;ajout d'une unité électrique dans les maisons autour
         ]
       ]
-      set capacity capacity - (count houses-on (patch-set f r l)) ;probleme
+      set capacity capacity - (count houses-on (patch-set f r l)) ;diminution d'autant d'unités électriques qu'il en a distribués
   ]
 end
 
 
+;comportement du château d'eau
 to decide-for-water-towers
-  if (ticks mod drop-freq = 0) [ ;génération d'une goutte d'eau tous les x tours
+  if (ticks mod drop-freq = 0) [ ;tous les drop-freq ticks
     hatch-drops 1 [ ;création d'une goutte d'eau
       set shape "drop"
       set color blue
       set size 2
-      set capacity 10
-      move-to patch-ahead 1
+      set capacity 10 ;capacité de 10 unités d'eau
+      move-to patch-ahead 1 ;la goutte d'eau est placée sur le patch en face du château d'eau
     ]
   ]
 end
 
 
+;comportement de l'usine
 to decide-for-factories
-  if (ticks mod scout-freq = 0) [ ;tous les x tours création d'un recruteur
-    hatch-recruteurs 1 [
+  if (ticks mod scout-freq = 0) [ ;tous les scout-freq ticks
+    hatch-recruteurs 1 [ ;création d'un recruteur
       set shape "person"
-      set color [color] of one-of factories
+      set color [color] of one-of factories ;de la même couleur que l'usine
       set size 2
-      move-to patch-ahead 1
+      move-to patch-ahead 1 ;le recruteur est placé sur le patch en face de l'usine
     ]
   ]
-  if (ticks mod retire-freq = 0 and employees > 0) [
-    set employees employees - 1
+  if (ticks mod retire-freq = 0 and employees > 0) [ ;tous les retire-freq ticks et si le nombre d'employés est > 0
+    set employees employees - 1 ;décrémentation du nombre d'employés
   ]
-  if (ticks mod prod-freq = 0) [
-    set pib pib + employees * productivity
+  if (ticks mod prod-freq = 0) [ ;tous les prod-freq ticks
+    set pib pib + employees * productivity ;création de nombre-d-employes*productivity richesses qu'on ajoute au pib
   ]
 end
 
 
+;comportement de la centrale électrique
 to decide-for-centrals
-  if (ticks mod light-freq = 0) [ ;génération d'un éclair tous les x tours
+  if (ticks mod light-freq = 0) [ ;tous leslight-freq ticks
     hatch-lightnings 1 [ ;création d'un éclair
       set shape "lightning"
       set color yellow
       set size 2
-      set capacity 10
-      move-to patch-ahead 1
+      set capacity 8 ;capacité de 8 unités électriques
+      move-to patch-ahead 1 ;l'éclair est placé en face de la centrale
     ]
   ]
 end
 
 
+;comportement d'un recruteur
 to decide-for-recruteurs
-  advance
-  let f patch-ahead 1
-  let r patch-right-and-ahead 90 1
-  let l patch-left-and-ahead 90 1
-  ifelse (any? houses-on (patch-set f))
+  advance ;le recruteur avance au hasard sur les routes
+  let f patch-ahead 1 ;le patch en face
+  let r patch-right-and-ahead 90 1 ;le patch à droite
+  let l patch-left-and-ahead 90 1 ;le patch à gauche
+  ifelse (any? houses-on (patch-set f)) ;s'il y a une maison sur le patch en face
   [
-    if (random 10 < 3 and [number] of one-of houses-on f > 0) [
-      hatch-cars 1 [
+    if (random 10 < 3 and [number] of one-of houses-on f > 0) [ ;probabilité de 30% de recruter une personne s'il y a au moins une personne dans la maison
+      hatch-cars 1 [ ;création d'une voiture
         set shape "car"
-        set color [color] of one-of houses-on f
+        set color [color] of one-of houses-on f ;même couleur que la maison d'où elle sort
         move-to patch-here
       ]
-      die
+      die ;le recruteur disparaît
     ]
   ]
   [
-    ifelse (any? houses-on (patch-set r)) [
-      if (random 10 < 3 and [number] of one-of houses-on r > 0) [
-        hatch-cars 1 [
+    ifelse (any? houses-on (patch-set r)) [ ;s'il y a une maison sur le patch à droite
+      if (random 10 < 3 and [number] of one-of houses-on r > 0) [ ;probabilité de 30% de recruter une personne s'il y a au moins une personne dans la maison
+        hatch-cars 1 [ ;création d'une voiture
           set shape "car"
-          set color [color] of one-of houses-on r
+          set color [color] of one-of houses-on r ;même couleur que la maison d'où elle sort
           move-to patch-here
         ]
-        die
+        die ;le recruteur disparaît
       ]
     ]
     [
-      if (any? houses-on (patch-set l)) [
-        if (random 10 < 3 and [number] of one-of houses-on l > 0) [
-          hatch-cars 1 [
+      if (any? houses-on (patch-set l)) [ ;s'il y a une maison sur le patch à gauche
+        if (random 10 < 3 and [number] of one-of houses-on l > 0) [ ;probabilité de 30% de recruter une personne s'il y a au moins une personne dans la maison
+          hatch-cars 1 [ ;création d'une voiture
             set shape "car"
-            set color [color] of one-of houses-on l
+            set color [color] of one-of houses-on l ;même couleur que la maison d'où elle sort
             move-to patch-here
           ]
-          die
+          die ;le recruteur disparaît
         ]
       ]
     ]
@@ -345,10 +339,10 @@ ticks
 30.0
 
 BUTTON
-102
-19
-165
-52
+268
+22
+331
+55
 NIL
 setup
 NIL
@@ -362,10 +356,10 @@ NIL
 1
 
 BUTTON
-20
-22
-83
-55
+184
+21
+247
+54
 NIL
 go
 T
@@ -379,10 +373,10 @@ NIL
 0
 
 SLIDER
-585
-315
-785
-348
+618
+408
+818
+441
 nb-houses
 nb-houses
 10
@@ -394,10 +388,10 @@ NIL
 HORIZONTAL
 
 PLOT
-5
-424
-548
-752
+20
+422
+563
+750
 population
 ticks
 population
@@ -412,21 +406,21 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot population"
 
 INPUTBOX
-582
-419
-783
-479
+615
+512
+816
+572
 population
-168
+314
 1
 0
 Number
 
 SLIDER
-586
-17
-783
-50
+619
+110
+816
+143
 drop-freq
 drop-freq
 0
@@ -438,25 +432,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-584
-120
-783
-153
+617
+213
+816
+246
 scout-freq
 scout-freq
 0
+1000
 100
 100
-10
 1
 NIL
 HORIZONTAL
 
 SLIDER
-584
-217
-783
-250
+617
+310
+816
+343
 retire-freq
 retire-freq
 100
@@ -468,10 +462,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-584
-266
-782
-299
+617
+359
+815
+392
 prod-freq
 prod-freq
 100
@@ -483,10 +477,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-584
-67
-783
-100
+617
+160
+816
+193
 light-freq
 light-freq
 0
@@ -498,10 +492,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-583
-362
-783
-395
+616
+455
+816
+488
 house-cost
 house-cost
 100
@@ -513,21 +507,21 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-581
-494
-787
-554
+614
+587
+816
+647
 pib
-0
+1410
 1
 0
 Number
 
 SLIDER
-584
-167
-784
-200
+617
+260
+817
+293
 productivity
 productivity
 0
@@ -539,10 +533,10 @@ NIL
 HORIZONTAL
 
 PLOT
-8
-89
-494
-400
+23
+76
+563
+398
 PIB
 ticks
 pib

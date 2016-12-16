@@ -137,13 +137,14 @@ to decide-for-water-towers
       set shape "drop"
       set color blue
       set size 2
-      set capacity 10
+      set capacity 10  ;capacité de 10 unités d'eau
       move-to patch-ahead 1 ;la goutte d'eau est créée sur le patch en face du château d'eau
     ]
   ]
 end
 
 
+;comportement de l'usine
 to decide-for-factories
   if (ticks mod scout-freq = 0) [ ;tous les scout-freq tours
     hatch-recruteurs 1 [ ;création d'un recruteur
@@ -153,7 +154,7 @@ to decide-for-factories
       move-to patch-ahead 1 ;le recruteur est créée sur le patch en face de l'usine
     ]
   ]
-  if (ticks mod retire-freq = 0 and employees > 0) [ ;tous les retire-freq et si le nombre d'employés est > 0
+  if (ticks mod retire-freq = 0 and employees > 0) [ ;tous les retire-freq ticks et si le nombre d'employés est > 0
     set employees employees - 1 ;décrémentation du nombre d'employés
   ]
   if (ticks mod prod-freq = 0) [ ;tous les prod-freq tours
